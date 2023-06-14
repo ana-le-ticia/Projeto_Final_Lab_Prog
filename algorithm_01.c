@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <convert_P5_to_P2.c>
+#include "convert_P5_to_P2.c"
 
 #define SIZE 100
 
