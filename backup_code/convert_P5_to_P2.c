@@ -2,7 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-int main(){
+void convert_data(int w, int h, FILE* , FILE* );
+
+int convert_file(){
 
     FILE * in;
     FILE * out;
@@ -37,17 +39,22 @@ int main(){
     fprintf(out, "%d %d\n", width, height);
     fprintf(out, "%d\n", maxValue);
 
-    unsigned char *data = (unsigned char *)malloc(width * height);
-    fread(data, sizeof(unsigned char), width * height, in);
-    for (int i = 0; i < (width * height); i++){
-        fprintf(out, "%u", data[i]);
-    }
+    convert_data(width, height, in, out);
 
-    free(data);
     fclose(in);
     fclose(out);
 
     printf("Conversao concluida.\n");
 
     return 0;
+}
+
+
+void convert_data(int w, int h, FILE* input, FILE* output){
+    unsigned char *data = (unsigned char *)malloc(w * h);
+    fread(data, sizeof(unsigned char), w * h, input);
+    for (int i = 0; i < (w * h); i++){
+        fprintf(output, "%u", data[i]);
+    }
+    free(data);
 }

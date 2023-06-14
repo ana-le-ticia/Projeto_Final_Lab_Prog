@@ -7,9 +7,9 @@
       "request": "launch",
       "args": [],
       "stopAtEntry": false,
-      "externalConsole": true,
-      "cwd": "c:/Users/HaruChungHee/Documents/trabalhos letícia 2019-2026/trb faculdade/Trb Final - Lab Prog",
-      "program": "c:/Users/HaruChungHee/Documents/trabalhos letícia 2019-2026/trb faculdade/Trb Final - Lab Prog/build/Debug/outDebug",
+      "externalConsole": false,
+      "cwd": "/home/ana_leticia/Projeto_Final_Lab_Prog",
+      "program": "/home/ana_leticia/Projeto_Final_Lab_Prog/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [

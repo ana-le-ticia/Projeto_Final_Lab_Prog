@@ -4,7 +4,7 @@
 
 void convert_data(int w, int h, FILE* , FILE* );
 
-int main(){
+int convert_file(){
 
     FILE * in;
     FILE * out;
