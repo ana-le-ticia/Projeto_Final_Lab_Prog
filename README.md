@@ -118,8 +118,8 @@ Gostaríamos de agradecer a todos os membros da equipe que contribuíram para o 
                 </a>
             </td>
             <td align="center">
-                <a href="" target="_blank">
-                    <img src="https://img.ifunny.co/images/606afded820a641d014c767eb1ea9c372f21337463d0559f95d5d2a1acfa9b5b_1.jpg" height="75" /> 
+                <a href="https://github.com/DarksaurGames" target="_blank">
+                    <img src="https://assets-prd.ignimgs.com/2022/10/19/untitled-1-copy-1666187781885.jpg" height="75" /> 
                 </a>
             </td>
             <td align="center">
@@ -140,7 +140,7 @@ Gostaríamos de agradecer a todos os membros da equipe que contribuíram para o 
                 </a>
             </td>
             <td align="center">
-                <a href="" target="_blank">
+                <a href="https://github.com/DarksaurGames" target="_blank">
                     Mateus
                 </a>
             </td>
