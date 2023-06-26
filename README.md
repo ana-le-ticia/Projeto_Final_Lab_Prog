@@ -114,7 +114,7 @@ Gostaríamos de agradecer a todos os membros da equipe que contribuíram para o 
             </td>
             <td align="center">
                 <a href="" target="_blank">
-                    <img src="https://pbs.twimg.com/media/EKq-JoIXsAAKNFA.jpg" height="75" /> 
+                    <img src="https://e7.pngegg.com/pngimages/824/948/png-clipart-kuzco-llama-youtube-youtube-face-human.png" height="75" /> 
                 </a>
             </td>
             <td align="center">
@@ -135,7 +135,7 @@ Gostaríamos de agradecer a todos os membros da equipe que contribuíram para o 
                 </a>
             </td>
             <td align="center">
-                <a href="" target="_blank">
+                <a href="https://github.com/ana-le-ticia" target="_blank">
                     Letícia
                 </a>
             </td>
