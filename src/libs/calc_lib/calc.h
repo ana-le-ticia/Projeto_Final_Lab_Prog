@@ -5,19 +5,25 @@
 #include <math.h>
 #include <stdlib.h>
 
+#define INVALID_STY_VALUE -1
+#define INVALID_DSTY_VALUE 99999999
+
 /* Compare Images Using ME */
-float EM(Image origin, Image crop, int x, int y);
+double EM(Image origin, Image crop, int init_x, int init_y);
 
 /* Compare Images Using MSE */
-float EQM(Image origin, Image crop, int x, int y);
+double EQM(Image origin, Image crop, int init_x, int init_y);
 
 /* Compare Images Using RMSE */
-float REQM(Image origin, Image crop, int x, int y);
+double REQM(Image origin, Image crop, int init_x, int init_y);
 
 /* Compare Images Using PSNR */
-float PSNR(Image origin, Image crop, int x, int y);
+double PSNR(Image origin, Image crop, int init_x, int init_y);
 
-/* Compare Images Using Pearson */
-float Pearson(Image origin, Image crop, int x, int y);
+/* Compare Images Using NCC */
+double NCC(Image origin, Image crop, int init_x, int init_y);
+
+/* Compare Images Using SSIM */
+double SSIM(Image origin, Image crop, int init_x, int init_y);
 
 #endif /* __CALC_LIB_H__ */

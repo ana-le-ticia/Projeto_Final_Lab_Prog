@@ -1,4 +1,4 @@
-#include "search.h"
+#include "util.h"
 
 int main(int argc, char **argv) {
 
@@ -6,7 +6,16 @@ int main(int argc, char **argv) {
     clock_t t_init = clock();
 
     Arguments arguments;
-    proccess_arguments(argc, argv, &arguments);
+    int status = proccess_arguments(argc, argv, &arguments);
+
+    switch(status){
+        case INVALID_ARGS:
+            fprintf(stderr, "\nInvalid argument formation!\nUse `%s -h` for help.\n\n", *argv);
+            exit(INVALID_ARGS);
+        case HELP_ARG:
+            print_help(*argv);
+            exit(HELP_ARG);
+    }
 
     //Get all files .pgm in TMP_PATH
     DIR_FILES pgm_files;
@@ -17,9 +26,10 @@ int main(int argc, char **argv) {
     }
 
     int r_scale = 1;
-    Image origin, origin_r, crop, crop_r, minimum_area;
+    Image origin, origin_r, bcrop, crop, crop_r, minimum_area;
     origin.data = NULL;
     crop.data = NULL;
+    bcrop.data = NULL;
     origin_r.data = NULL;
     crop_r.data = NULL;
     minimum_area.data = NULL;
@@ -29,7 +39,7 @@ int main(int argc, char **argv) {
 
     // Load origin image from line argument.
     if(arguments.origin){
-        sprintf(current_image, "%s", *(argv+1));
+        sprintf(current_image, "%s", arguments.origin);
         PGM_load(current_image, &origin);
         if(!PGM_load(current_image, &origin)){
             fprintf(stderr, "\"%s\":\n", current_image);
@@ -42,9 +52,11 @@ int main(int argc, char **argv) {
 
     Crop * all_crops = (Crop *) malloc(sizeof(Crop) * pgm_files.size);
 
-    int x = 0, y = 0, fx = 0, fy = 0;
-    float comp;
     if(arguments.force_scale) r_scale = arguments.force_scale;
+
+    int x = 0, y = 0;
+    int fx = 0, fy = 0;
+    double new_value;
 
     for(int k = 0; k < pgm_files.size; k++){
 
@@ -88,6 +100,7 @@ int main(int argc, char **argv) {
         PGM_resize(origin, &origin_r, r_scale);
         PGM_resize(crop, &crop_r, r_scale);
 
+        PGM_square_crop(crop.w-2, 1, 1, crop, &bcrop);
         PGM_square_crop(crop_r.w-1, 1, 1, crop_r, &minimum_area);
 
         if(!strcmp(current_image, "")){
@@ -95,9 +108,7 @@ int main(int argc, char **argv) {
             continue;
         }
 
-        x = 0;
-        y = 0;
-
+        x = 0;y = 0;
         for(int i = 0; i < origin_r.h*origin_r.w; i++){
 
             if(i > 0 && (i%origin_r.w) == 0){
@@ -105,10 +116,10 @@ int main(int argc, char **argv) {
                 y++;
             }
 
-            comp = REQM(origin_r, minimum_area, x+1, y+1);
+            new_value = arguments.match_method(origin_r, minimum_area, x+1, y+1);
 
-            if(comp < (all_crops+k)->err){
-                (all_crops+k)->err = comp;
+            if(arguments.compare_method(new_value, (all_crops+k)->err) || i == 0){
+                (all_crops+k)->err = new_value;
                 (all_crops+k)->x = x*r_scale;
                 (all_crops+k)->y = y*r_scale;
             }
@@ -120,29 +131,28 @@ int main(int argc, char **argv) {
 
         }
 
-        (all_crops + k)->err = REQM(origin, crop, (all_crops+k)->x, (all_crops+k)->y);
+        (all_crops + k)->err = arguments.match_method(origin, crop, (all_crops+k)->x, (all_crops+k)->y);
 
         if(arguments.print_results) log_crop(*(all_crops+k), 1, 1);
 
         fx = (all_crops+k)->x;
         fy = (all_crops+k)->y;
-
         x = fx - arguments.check_area/2;
         y = fy - arguments.check_area/2;
 
         for(int i = 0; i < arguments.check_area*arguments.check_area; i++){
-
+            
             if(i > 0 && (i%arguments.check_area) == 0){
                 x = fx - arguments.check_area/2;
                 y++;
             }
             
-            comp = REQM(origin, crop, x, y);
+            new_value = arguments.match_method(origin, bcrop, x, y); //PSNR(origin, crop, x, y);
 
-            if(comp < (all_crops+k)->err){
-                (all_crops+k)->err = comp;
-                (all_crops+k)->x = x;
-                (all_crops+k)->y = y;
+            if(arguments.compare_method(new_value, (all_crops+k)->err) || i == 0){
+                (all_crops+k)->err = new_value;
+                (all_crops+k)->x = x-1;
+                (all_crops+k)->y = y-1;
             }
 
             x++;
@@ -157,6 +167,7 @@ int main(int argc, char **argv) {
         }
 
         free_data(&crop.data);
+        free_data(&bcrop.data);
         free_data(&crop_r.data);
         free_data(&origin_r.data);
         free_data(&minimum_area.data);
@@ -169,9 +180,10 @@ int main(int argc, char **argv) {
 
 
     /* Saving found positions */
-    if(!save_positions("found_positions.csv", all_crops, pgm_files.size)) 
-        fprintf(stderr, "\nErro ao salvar arquivo de posições!\n");
-
+    if(arguments.output){
+        if(!save_positions(arguments.output, all_crops, pgm_files.size)) 
+            fprintf(stderr, "\nErro ao salvar arquivo de posições!\n");
+    }
 
     /* Compare results if --test-file flag was given. */
     if(arguments.test_file != NULL){

@@ -1,142 +1,237 @@
-
 #include "calc.h"
 
-float EM(Image origin, Image crop, int x, int y){
+double EM(Image origin, Image crop, int init_x, int init_y){
 
-    float em = 0;
+    if(init_x > origin.w - crop.w || init_y > origin.h - crop.h) 
+        return INVALID_DSTY_VALUE;
 
-    if(x > origin.w - crop.w) return 9990;
-    if(y > origin.h - crop.h) return 9990;
+    double em = 0;
+    double dist = 0;
 
-    int x2 = x, y2 = y;
+    int x = init_x, y = init_y;
+    int index = (y * origin.w) + x;
 
     for(int i = 0; i < crop.h*crop.w; i++){
 
+        index = (y * origin.w) + x;
         if(i > 0 && (i%crop.w) == 0){
-            y2++;
-            x2 = x;
+            y++;
+            x = init_x;
         }
 
-        em += (pow((*(crop.data+ i)) - (*(origin.data + (y2*origin.w) + x2)), 2))/(float)(crop.w*crop.h);
-        x2++;
+        dist = abs((*(crop.data+ i)) - (*(origin.data + index)));
+        em += dist;
+
+        x++;
     }
+
+    em /= (double)(crop.w*crop.h);
 
     return em;
 }
 
-float EQM(Image origin, Image crop, int x, int y){
+double EQM(Image origin, Image crop, int init_x, int init_y){
 
-    float eqm = 0;
+    if(init_x > origin.w - crop.w || init_y > origin.h - crop.h) 
+        return INVALID_DSTY_VALUE;
 
-    if(x > origin.w - crop.w) return 9990;
-    if(y > origin.h - crop.h) return 9990;
+    double eqm = 0;
+    double dist = 0;
 
-    int x2 = x, y2 = y;
+    int x = init_x, y = init_y;
+    int index = (y * origin.w) + x;
+
     for(int i = 0; i < crop.h*crop.w; i++){
-
-        if(((y2*origin.w) + x2) >= (origin.w*origin.h)) continue;
+        
+        index = (y * origin.w) + x;
+        if(index >= (origin.w*origin.h)) continue;
 
         if(i > 0 && (i%crop.w) == 0){
-            y2++;
-            x2 = x;
+            y++;
+            x = init_x;
         }
 
-        eqm += (pow((*(crop.data+ i)) - (*(origin.data + (y2*origin.w) + x2)), 2))/(crop.w*crop.h);
-        x2++;
+        dist = (*(crop.data+ i)) - (*(origin.data + index));
+        eqm += (dist * dist);
+
+        x++;
     }
+
+    eqm /= (double) (crop.w*crop.h);
 
     return eqm;
 }
 
-float REQM(Image origin, Image crop, int x, int y){
+double REQM(Image origin, Image crop, int init_x, int init_y){
 
-    float eqm = 0;
+    if(init_x > origin.w - crop.w || init_y > origin.h - crop.h) 
+        return INVALID_DSTY_VALUE;
 
-    if(x > origin.w - crop.w) return 9990;
-    if(y > origin.h - crop.h) return 9990;
+    double eqm = 0;
+    double dist = 0;
 
-    int x2 = x, y2 = y;
+    int x = init_x, y = init_y;
+    int index = (y * origin.w) + x;
+
     for(int i = 0; i < crop.h*crop.w; i++){
 
-        if(((y2*origin.w) + x2) >= (origin.w*origin.h)) continue;
+        index = (y * origin.w) + x;
+        if(index >= (origin.w*origin.h)) continue;
 
         if(i > 0 && (i%crop.w) == 0){
-            y2++;
-            x2 = x;
+            y++;
+            x = init_x;
         }
-
-        eqm += (pow((*(crop.data+ i)) - (*(origin.data + (y2*origin.w) + x2)), 2))/(crop.w*crop.h);
-        x2++;
+        dist = (*(crop.data+ i)) - (*(origin.data + index));
+        eqm += (dist * dist);
+        x++;
     }
 
-    float reqm = sqrt(eqm);
+    eqm /= (double) (crop.w*crop.h);
+    double reqm = sqrt(eqm);
 
     return reqm;
 }
 
-float Pearson(Image origin, Image crop, int x, int y){
-
-    if(x > origin.w - crop.w) return -12211221;
-    if(y > origin.h - crop.h) return -12211221;
-
-    float pearson = 0;
-
-    float sum_x = 0, average_x = 0;
-    float sum_j = 0, average_j = 0;
-    float sum_h = 0;
-
-    int x2 = x, y2 = y;
-    for(int i = 0; i < crop.h*crop.w; i++){
-        if(i > 0 && (i%crop.w) == 0){
-            y2++;
-            x2 = x;
-        }
-        average_j += (*(origin.data + (y2*origin.w) + x2))/(crop.h*crop.w);
-        average_x += (*(crop.data+i))/(crop.h*crop.w);
-        x2++;
-    }
-
-    x2 = x; y2 = y;
-    for(int i = 0; i < crop.h*crop.w; i++){
-        if(i > 0 && (i%crop.w) == 0){
-            y2++;
-            x2 = x;
-        }
+double NCC(Image origin, Image crop, int init_x, int init_y){
     
-        sum_h += (*(crop.data+i) - average_x) * (*(origin.data + (y2*origin.w) + x2) - average_j)/  (float) (crop.h*crop.w -1);
-        sum_x += (*(crop.data+i) - average_x)/ (float) (crop.h*crop.w -1);
-        sum_j += (*(origin.data + (y2*origin.w) + x2) - average_j)/ (float) (crop.h*crop.w -1);
+    if(init_x > origin.w - crop.w || init_y > origin.h - crop.h) 
+        return INVALID_STY_VALUE;
 
-        x2++;
+    double pearson = 0;
+
+    double mean1 = 0.0, mean2 = 0.0;
+    double var1 = 0.0, var2 = 0.0, covar = 0.0;
+    double diff1 , diff2;
+
+    int x = init_x, y = init_y;
+    int index = (y * origin.w) + x;
+
+    for(int i = 0; i < crop.h*crop.w; i++){
+
+        index = (y * origin.w) + x;
+        if(i > 0 && (i%crop.w) == 0){
+            y++;
+            x = init_x;
+        }
+
+        mean1 += (double) (*(crop.data+i));
+        mean2 += (double) (*(origin.data + index));
+
+        x++;
     }
 
-    pearson = sum_h / sqrt(pow(sum_x, 2) * pow(sum_j, 2));
+    mean1 /= (crop.w*crop.h);
+    mean2 /= (crop.w*crop.h);
+
+    x = init_x; y = init_y;
+    index = (y * origin.w) + x;
+
+    for(int i = 0; i < crop.h*crop.w; i++){
+
+        index = (y * origin.w) + x;
+        if(i > 0 && (i%crop.w) == 0){
+            y++;
+            x = init_x;
+        }
+
+        diff1 = *(crop.data+i) - mean1;
+        diff2 = *(origin.data+index) - mean2;
+
+        var1 += diff1 * diff1;
+        var2 += diff2 * diff2;
+        covar += diff1 * diff2;
+
+        x++;
+    }
+
+    var1 /= (crop.w * crop.h - 1);
+    var2 /= (crop.w * crop.h - 1);
+    covar /= (crop.w * crop.h - 1);
+
+    pearson = covar / (double) sqrt(var1*var2);
 
     return pearson;
 }
 
-float PSNR(Image origin, Image crop, int x, int y){
+double PSNR(Image origin, Image crop, int init_x, int init_y){
 
-    float eqm = 0;
+    if(init_x > origin.w - crop.w || init_y > origin.h - crop.h) 
+        return INVALID_STY_VALUE;
 
-    if(x > origin.w - crop.w) return -1;
-    if(y > origin.h - crop.h) return -1;
+    double eqm = EQM(origin, crop, init_x, init_y);
 
-    int x2 = x, y2 = y;
-    for(int i = 0; i < crop.h*crop.w; i++){
-
-        if(((y2*origin.w) + x2) >= (origin.w*origin.h)) continue;
-
-        if(i > 0 && (i%crop.w) == 0){
-            y2++;
-            x2 = x;
-        }
-
-        eqm += (pow((*(crop.data+ i)) - (*(origin.data + (y2*origin.w) + x2)), 2))/(crop.w*crop.h);
-        x2++;
-    }
-
-    float psnr = 20 * log10((double) crop.max / (double) sqrt(eqm));
+    double psnr = (double) 10 * log10((double) (crop.max*crop.max) / eqm);
 
     return psnr;
+}
+
+double SSIM(Image origin, Image crop, int init_x, int init_y)
+{
+
+    if(init_x > origin.w - crop.w || init_y > origin.h - crop.h) 
+        return INVALID_STY_VALUE;
+
+    double L = 255.0;
+    double C1 = (0.01 * L) * (0.01 * L);
+    double C2 = (0.03 * L) * (0.03 * L);
+
+    unsigned int width = crop.w;
+    unsigned int height = crop.h;
+    unsigned char * data1 = crop.data;
+    unsigned char * data2 = origin.data;
+
+
+    double mean1 = 0.0, mean2 = 0.0;
+    double var1 = 0.0, var2 = 0.0, covar = 0.0;
+
+    // Calculate means, variances, and covariance
+    int x = init_x, y = init_y;
+    int index = y * origin.w + x;
+
+    for (unsigned int i = 0; i < height*width; i++) {
+
+        index = y * origin.w + x;
+
+        if(i > 0 && (i%width) == 0){
+            y++;
+            x = init_x;
+        }
+
+        mean1 += data1[i];
+        mean2 += data2[index];
+
+        x++;
+    }
+
+    mean1 /= (width * height);
+    mean2 /= (width * height);
+
+    x = init_x;
+    y = init_y;
+    for (unsigned int i = 0; i < height*width; i++) {
+
+        index = y * origin.w + x;
+        if(i > 0 && (i%width) == 0){
+            y++;
+            x = init_x;
+        }
+
+        double diff1 = data1[i] - mean1;
+        double diff2 = data2[index] - mean2;
+        var1 += diff1 * diff1;
+        var2 += diff2 * diff2;
+        covar += diff1 * diff2;
+
+        x++;
+    }
+
+    var1 /= (width * height - 1);
+    var2 /= (width * height - 1);
+    covar /= (width * height - 1);
+
+    // Calculate SSIM
+    double ssim = ((2 * mean1 * mean2 + C1) * (2 * covar + C2)) / ((mean1 * mean1 + mean2 * mean2 + C1) * (var1 + var2 + C2));
+
+    return ssim;
 }
