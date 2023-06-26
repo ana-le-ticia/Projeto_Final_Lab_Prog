@@ -25,6 +25,11 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    if(pgm_files.size <= 0){
+        fprintf(stderr, "\nSem imagens do formato .pgm no dirétorio \"%s\".\n\n", pgm_files.path);
+        return 1;
+    }
+
     int r_scale = 1;
     Image origin, origin_r, bcrop, crop, crop_r, minimum_area;
     origin.data = NULL;
@@ -89,7 +94,7 @@ int main(int argc, char **argv) {
             if(origin.w*origin.h >= 128*128) r_scale = 2;
             if(origin.w*origin.h >= 256*256) r_scale = 3;
             if(origin.w*origin.h >= 512*512) r_scale = 4;
-            if(origin.w*origin.h >= 1024*1024) r_scale = 5;
+            if(origin.w*origin.h >= 1720*1720) r_scale = 5;
         }
 
         if(crop.h/r_scale == 0 || crop.w/r_scale == 0){
