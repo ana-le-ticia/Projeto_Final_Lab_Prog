@@ -155,7 +155,7 @@ int save_positions(char * filename, Crop * crops, unsigned size){
 
     fprintf(save_file, "Filename, Position X, Position Y\n");
     for(int i = 0; i < size; i++){
-        fprintf(save_file, "%s, %d, %d\n", strtok((crops+i)->filename, "."), (crops+i)->x, (crops+i)->y);
+        fprintf(save_file, "%s, %d, %d\n", strtok(crops[i]->filename, "."), crops[i]->x, crops[i]->y);
     }
 
     fclose(save_file);
