@@ -1,124 +1,117 @@
 
+#include "../libs/img_lib/img_lib.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include "convert_P5_to_P2.c"
 
 #define SIZE 100
 
-typedef struct {
-    int width;
-    int height;
-    int maxValue;
-    unsigned char * data;
-} PGM_image;
+void filtroMedia(Image *imagem, int tamanhoJanela) {
+    int metadeJanela = tamanhoJanela / 2;
 
-PGM_image read_image(const char * file_name){
-    FILE * input_img;
-    char pgm_verifier[3];
-    int img_width, img_height, max_value;
+    unsigned char *pixelsOriginais = imagem->data;
+    unsigned char *pixelsFiltrados = (unsigned char *)malloc(imagem->w * imagem->h * sizeof(unsigned char));
 
-    input_img = fopen("file_name", "r");
-    if (!input_img){
-        printf("Erro ao abrir arquivo.\n");
-        exit(1);
-    }
+    for (int i = 0; i < imagem->h; i++) {
+        for (int j = 0; j < imagem->w; j++) {
+            int soma = 0;
+            int count = 0;
 
-    fscanf(input_img, "%2s", pgm_verifier);
-    if(pgm_verifier[0] != 'P' || pgm_verifier[1] != '2'){
-        printf("O arquivo não é uma imagem PGM valida\n");
-        exit(1);
-    }
+            for (int k = -metadeJanela; k <= metadeJanela; k++) {
+                for (int l = -metadeJanela; l <= metadeJanela; l++) {
+                    int row = i + k;
+                    int col = j + l;
 
-    fscanf(input_img, "%d %d %d", &img_width, &img_height, &max_value);
-    fgetc(input_img);
+                    if (row >= 0 && row < imagem->h && col >= 0 && col < imagem->w) {
+                        soma += pixelsOriginais[row * imagem->w + col];
+                        count++;
+                    }
+                }
+            }
 
-    PGM_image image;
-
-    image.width = img_width;
-    image.height = img_height;
-    image.maxValue = max_value;
-    image.data = (unsigned char*)malloc(image.width*image.height);
-
-    fread(image.data, sizeof(unsigned char), image.width * image.height, input_img);
-
-    fclose(input_img);
-
-    return image;
-}
-
-//escreve os dados de uma estrutura pgm (imagem pgm) em um arquivo PGM
-void write_image(const char * file_name, const PGM_image * image){
-    FILE * img_file;
-    img_file = fopen(img_file, "w");
-    if(!file_name){
-        printf("Erro ao criar arquivo.\n");
-        exit(1);
-    }
-
-    fprintf(img_file, "P2\n%d %d\n %d\n", image->width, image->height, image->maxValue);
-    fwrite(image->data, sizeof(unsigned char), image->width * image->height, img_file);
-
-    fclose(img_file);
-}
-
-PGM_image cut_image(const PGM_image * image, int width, int height){
-    srand(time(NULL));
-    PGM_image image_cut;
-    int x, y, original_index, cropped_index;
-
-    image_cut.width = width;
-    image_cut.height = height;
-    image_cut.maxValue = image->maxValue;
-    image_cut.data = (unsigned char *)malloc(image_cut.width * image_cut.height);
-
-    x = rand() % (image->width - width+1);
-    y = rand() % (image->height - height+1);
-
-    for(int i = 0; i < image_cut.height; i++){
-        for(int j = 0; j < image_cut.width; j++){
-            original_index = (y + i) * image->width + (x + j);
-            cropped_index = i * width + j;
-            image_cut.data[cropped_index] = image->data[original_index];
+            pixelsFiltrados[i * imagem->w + j] = soma/(tamanhoJanela*tamanhoJanela);
         }
     }
 
-    return image_cut;
+    free(imagem->data);
+    imagem->data = pixelsFiltrados;
 }
 
-int main(int argc, char * argv[]){
-    srand(time(NULL));
-    char file_name, output_file[20];
-    int cut_width, cut_height, cut_quant;
+int cut_image(const Image *image, Image *image_cut, int width, int height) {
+  srand(time(NULL));
+  int x, y, original_index, cropped_index;
 
-    if (argc != 5){
-        printf("Erro, quantidade errada de argumentos.\n");
+  image_cut->w = width;
+  image_cut->h = height;
+  image_cut->max = image->max;
+  image_cut->data = (unsigned char *)malloc(sizeof(unsigned char) *
+                                            (image_cut->w * image_cut->h));
+
+  x = rand() % (image->w - width + 1);
+  y = rand() % (image->h - height + 1);
+
+  for (int i = 0; i < image_cut->h; i++) {
+    for (int j = 0; j < image_cut->w; j++) {
+      original_index = (y + i) * image->w + (x + j);
+      cropped_index = i * width + j;
+      image_cut->data[cropped_index] = 1;
+    }
+  }
+
+  return 1;
+}
+
+int main(int argc, char *argv[]) {
+  srand(time(NULL));
+  char *file_name, *diretorio;
+  int cut_width, cut_height, cut_quant;
+
+  if (argc != 6) {
+    printf("Erro, quantidade errada de argumentos.\n");
+  }
+
+  file_name = argv[1];
+  diretorio = argv[2];
+  cut_height = atoi(argv[2]);
+  cut_width = atoi(argv[3]);
+  cut_quant = atoi(argv[4]);
+
+  Image image;
+  image.data = NULL;
+  if (!PGM_load(file_name, &image)) {
+    perror("Erro");
+    return 1;
+  }
+
+  char cropped_file[256];
+
+  Image image_cut;
+  image_cut.data = NULL;
+  int x, y;
+
+  FILE * coordenadas_origem;
+  coordenadas_origem = fopen("robson.csv", "w");
+  fprintf(coordenadas_origem, "nome do arquivo, posição x, posição y\n");
+  for (int i = 0; i < cut_quant; i++) {
+    
+    x = rand() % (image.w - 100 + 1);
+    y = rand() % (image.h - 100 + 1);
+    PGM_square_crop(100, x, y, image, &image_cut);
+
+    filtroMedia(&image_cut, 3);
+
+    sprintf(cropped_file, "Crop_%d", i);
+
+    if (!PGM_save(cropped_file, diretorio, image_cut)) {
+      perror("Erro");
     }
 
-    file_name = atoi(argv[1]);
-    cut_height = atoi(argv[2]);
-    cut_width = atoi(argv[3]);
-    cut_quant = atoi(argv[4]);
+    fprintf(coordenadas_origem, "%s, %d, %d\n", cropped_file, x, y);
+      
+    free(image_cut.data);
+  }
 
-    PGM_image image = read_image(file_name);
+  fclose(coordenadas_origem);
 
-    FILE * output_file = fopen("recortes.pgm", "w");
-    if (output_file == NULL){
-        printf("Erro ao abrir arquivo.\n");
-        exit(1);
-    }
-
-    fprintf(output_file,"P2\n%d %d\n255\n", cut_width, cut_height * cut_quant);
-
-    for(int i = 0; i < cut_quant; i++){
-        PGM_image image_cut = cut_image(&image, cut_width, cut_height);
-
-        fwrite(image_cut.data, sizeof(unsigned char), cut_width * cut_height, output_file);
-
-        free(image_cut.data);
-    }
-
-    fclose(output_file);
-
-    return 0;
+  return 0;
 }
